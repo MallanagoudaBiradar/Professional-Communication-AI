@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Professional Communication Assistant</title>
+    <style>
+        /* --- General Styling and Fonts --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e9ecef; /* Light gray background */
+        }
+        .container {
+            display: flex;
+            max-width: 1300px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            min-height: 80vh;
+        }
+
+        /* --- Panel Layout and Headings --- */
+        .left-panel {
+            width: 400px; /* Fixed width for controls */
+            padding: 30px;
+            border-right: 1px solid #dee2e6;
+            background-color: #f8f9fa; /* Slightly lighter control panel */
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
+        .right-panel {
+            flex-grow: 1; /* Takes up remaining space */
+            padding: 30px;
+        }
+        h1 {
+            color: #007bff; /* Primary blue color */
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        .subheader {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #343a40;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        /* --- Input Fields --- */
+        textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-sizing: border-box;
+            resize: vertical;
+            font-size: 0.95em;
+        }
+        textarea#prompt-input {
+            min-height: 80px;
+        }
+
+        /* --- Button Groups (Audience/Format) --- */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .button-group button {
+            background-color: #ffffff;
+            color: #007bff;
+            border: 1px solid #007bff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+        .button-group button:hover {
+            background-color: #e2f0ff; /* Light hover effect */
+        }
+        .button-group button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+
+        /* --- Generate Button --- */
+        #generate-btn {
+            background-color: #28a745; /* Green for action */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+        #generate-btn:hover {
+            background-color: #1e7e34;
+        }
+        #generate-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* --- Output Area Container Styling (applies to the border/background) --- */
+        .output-container {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        
+        /* --- Textarea Styling (ensures correct font and flow) --- */
+        textarea#output-area {
+            /* Inherited from general textarea styles, but explicitly ensure no border/padding conflict */
+            width: 100%;
+            min-height: 350px;
+            border: none;
+            background-color: #f8f9fa;
+            font-family: 'Consolas', 'Courier New', monospace; /* Monospace font for structured output */
+            font-size: 0.95em;
+            color: #333;
+            resize: none; /* Prevent manual resizing */
+            box-sizing: border-box; 
+            padding: 0; /* Remove internal textarea padding to match container padding */
+            margin: 0; /* Remove internal textarea margin */
+        }
+        
+        .output-actions {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .output-actions button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .output-actions button:hover {
+            background-color: #5a6268;
+        }
+        .output-actions button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        /* Loading style for the central loading text */
+        .loading {
+            text-align: center;
+            font-size: 1.1em;
+            color: #007bff;
+            padding-top: 150px; /* Center loading text vertically */
+            min-height: 350px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-panel">
+        <h1>🚀 Professional Communication AI</h1>
+        <p class="subheader">Streamline drafting for school, academic, and professional needs.</p>
+
+        <h3>1. Draft Topic & Details</h3>
+        <textarea id="prompt-input" rows="4" placeholder="e.g., I need a formal email requesting sick leave for December 15th, 2025. Mention I have prepared my lesson plans in advance."></textarea>
+
+        <h3>2. Target Audience</h3>
+        <div id="audience-buttons" class="button-group">
+            <button data-audience="Parents" class="active">Parents</button>
+            <button data-audience="Students">Students</button>
+            <button data-audience="School Administrator">School Admin</button>
+            <button data-audience="Peers/Colleagues">Peers/Colleagues</button>
+            <button data-audience="External Authority/Other">External/Other</button>
+        </div>
+
+        <h3>3. Message Format/Goal</h3>
+        <div id="format-buttons" class="button-group">
+            <button data-format="Formal Request" class="active">Formal Request (e.g., Leave)</button>
+            <button data-format="Positive Feedback/Achievement">Positive Achievement</button>
+            <button data-format="Corrective Action/Behavior Concern">Behavior Concern</button>
+            <button data-format="Event/Trip Announcement">Event/Trip Announcement</button>
+            <button data-format="Relocation/Change Notice">Relocation/Notice</button>
+            <button data-format="Meeting Invitation/Agenda">Meeting Invitation</button>
+        </div>
+
+        <h3>4. Select Language</h3>
+        <select id="language-select">
+            <option value="English">English</option>
+            <option value="Hindi">Hindi (हिंदी)</option>
+            <option value="Marathi">Marathi (मराठी)</option>
+            <option value="Bengali">Bengali (বাংলা)</option>
+            <option value="Tamil">Tamil (தமிழ்)</option>
+            <option value="Telugu">Telugu (తెలుగు)</option>
+            <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+            <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+            <option value="French">French (Français)</option>
+            <option value="Spanish">Spanish (Español)</option>
+        </select>
+
+        <div style="margin-top: 30px;">
+            <button id="generate-btn"><span id="button-text">✍️ Generate Draft</span></button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <h2 style="color: #343a40;">Generated Professional Document</h2>
+        <p style="color: #6c757d; margin-bottom: 20px;">Review and personalize the draft below before sending.</p>
+        
+        <div class="output-container">
+            <textarea id="output-area" 
+                      rows="20" 
+                      placeholder="Your AI-generated draft will appear here after you input the details and click 'Generate Draft'." 
+                      >Your AI-generated draft will appear here after you input the details and click 'Generate Draft'.</textarea>
+        </div>
+
+        <div class="output-actions">
+            <button id="copy-btn" disabled>📋 Copy Draft</button>
+            <button id="save-btn" disabled>💾 Download as Text</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GEMINI_API_KEY = 'AIzaSyBd6OzEf9lOS4UnuhLrpRBAbuW0lL2bsdM'; 
+    const GEMINI_MODEL = 'gemini-2.5-flash';
+
+    const promptInput = document.getElementById('prompt-input');
+    const audienceButtons = document.getElementById('audience-buttons');
+    const formatButtons = document.getElementById('format-buttons');
+    const languageSelect = document.getElementById('language-select');
+    const generateBtn = document.getElementById('generate-btn');
+    const buttonText = document.getElementById('button-text');
+    const outputArea = document.getElementById('output-area');
+    const copyBtn = document.getElementById('copy-btn');
+    const saveBtn = document.getElementById('save-btn');
+
+    let selectedAudience = 'Parents';
+    let selectedFormat = 'Formal Request';
+    const initialPromptText = "I need a formal email requesting sick leave for December 15th, 2025. Mention I have prepared my lesson plans in advance.";
+
+
+
+    function handleButtonClick(event, type) {
+        if (event.target.tagName === 'BUTTON') {
+            const container = type === 'audience' ? audienceButtons : formatButtons;
+            container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (type === 'audience') {
+                selectedAudience = event.target.getAttribute('data-audience');
+            } else {
+                selectedFormat = event.target.getAttribute('data-format');
+            }
+        }
+    }
+
+    audienceButtons.addEventListener('click', (e) => handleButtonClick(e, 'audience'));
+    formatButtons.addEventListener('click', (e) => handleButtonClick(e, 'format'));
+
+
+    async function generateText() {
+        const userPrompt = promptInput.value.trim();
+        const selectedLanguage = languageSelect.value;
+
+        if (!userPrompt) {
+            alert("Please provide the details and topic of your draft in section 1.");
+            return;
+        }
+
+        buttonText.textContent = '⏳ Generating...';
+        generateBtn.disabled = true;
+        copyBtn.disabled = true;
+        saveBtn.disabled = true;
+        
+        outputArea.value = ''; // Clear text
+        outputArea.placeholder = 'Communicating with Gemini and structuring your draft...'; // Display loading via placeholder
+        outputArea.classList.add('loading'); // Use the loading CSS class for center alignment/color
+
+        const combinedPrompt = `
+            You are an AI assistant specialized in generating professional, empathetic, and structured communications for academic and professional settings. Your final output must be ready to use, including appropriate placeholders.
+
+            **Task:** Generate a well-written, professional message.
+            **User Intent/Topic:** "${userPrompt}"
+            **Recipient (Audience):** "${selectedAudience}"
+            **Message Format/Goal:** "${selectedFormat}"
+            **Language:** "${selectedLanguage}"
+
+            ---
+            **Instructions for Output:**
+            1. Adopt a formal, clear, and professional tone.
+            2. The message must be entirely in the specified **Language**.
+            3. Use bracketed placeholders (e.g., [Recipient Name], [Date], [Your Contact]) for all personalized details the user needs to fill in.
+            4. Structure the output clearly with salutation, body paragraphs, and a sign-off.
+            5. **Crucially: Do not include any preceding or concluding chat text, greetings, markdown headers, or code blocks. ONLY output the message content itself.**
+        `;
+
+
+        // 3. Construct the body with ONLY the user role
+        const bodyContent = {
+            contents: [
+                { role: "user", parts: [{ text: combinedPrompt }] }
+            ],
+            generationConfig: { 
+                temperature: 0.7 
+            }
+        };
+
+        // 4. Call the Gemini API
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(bodyContent)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Content generation failed. Please refine your prompt and try again.";
+            
+            // 5. Update the output area
+            outputArea.value = generatedText; // Use .value for textarea
+            outputArea.placeholder = ''; // Clear loading placeholder
+
+        } catch (error) {
+            console.error("Gemini API Error:", error);
+            // Display error in the output box
+            outputArea.value = `An error occurred: ${error.message}. Please check your API key validity and network connection.`;
+        } finally {
+            // 6. Reset UI
+            buttonText.textContent = '✍️ Generate Draft';
+            generateBtn.disabled = false;
+            outputArea.classList.remove('loading'); // Remove loading CSS class
+
+            // Enable Copy/Save only if generation was successful
+            const isError = outputArea.value.includes("An error occurred") || outputArea.value.includes("failed");
+            copyBtn.disabled = isError || outputArea.value.trim() === '';
+            saveBtn.disabled = isError || outputArea.value.trim() === '';
+        }
+    }
+
+    generateBtn.addEventListener('click', generateText);
+
+    // --- Copy and Save Functionality ---
+
+    copyBtn.addEventListener('click', () => {
+        // Use .value to get content from textarea
+        navigator.clipboard.writeText(outputArea.value)
+            .then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+            })
+            .catch(err => {
+                alert('Could not copy text: ' + err);
+            });
+    });
+
+    saveBtn.addEventListener('click', () => {
+        // Use .value to get content from textarea
+        const textToSave = outputArea.value; 
+        const blob = new Blob([textToSave], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'AI_Generated_Communication.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    // Set initial values 
+    promptInput.value = initialPromptText;
+    document.querySelector('[data-format="Formal Request"]').click();
+
+</script>
+
+</body>
+</html>
